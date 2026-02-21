@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PulsePages
 
-## Getting Started
+A client portal and proposal platform for freelancers and small agencies. Send proposals, track milestones, invoice clients, and get paid — all through one branded link.
 
-First, run the development server:
+## Features
+
+- **Client Portals** — Each project gets a unique public URL (`/p/project-slug`) clients can access without logging in
+- **Proposals** — Write and send proposals that clients can approve with one click
+- **Milestone Tracking** — Create milestones, track progress, mark completions
+- **Invoicing** — Generate invoices with Stripe payment links
+- **Activity Feed** — Full timeline of project events
+- **Subscription Billing** — Free, Pro ($19/mo), and Agency ($49/mo) plans via Stripe
+
+## Tech Stack
+
+- **Framework:** Next.js (App Router)
+- **Database & Auth:** Supabase
+- **Payments:** Stripe
+- **Styling:** Tailwind CSS
+- **Icons:** lucide-react
+
+## Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up Supabase
+
+1. Create a project at [supabase.com](https://supabase.com)
+2. Go to the SQL Editor and run the migration file: `supabase/migrations/001_schema.sql`
+3. Copy your project URL and keys from Project Settings → API
+
+### 3. Set up Stripe
+
+1. Get your API keys from [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys)
+2. Create two subscription products in Stripe:
+   - **Pro** — $19/month
+   - **Agency** — $49/month
+3. Copy the price IDs
+4. Set up a webhook endpoint pointing to `your-domain/api/stripe/webhook` with these events:
+   - `checkout.session.completed`
+   - `payment_intent.succeeded`
+   - `customer.subscription.deleted`
+
+### 4. Configure environment variables
+
+```bash
+cp .env.local.example .env.local
+```
+
+Fill in all values in `.env.local`.
+
+### 5. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── (dashboard)/          # Authenticated dashboard
+│   │   ├── layout.tsx        # Sidebar + top bar
+│   │   ├── page.tsx          # Dashboard home
+│   │   ├── projects/
+│   │   │   ├── page.tsx      # Projects list
+│   │   │   ├── new/page.tsx  # Create project
+│   │   │   └── [id]/page.tsx # Project detail (tabs)
+│   │   └── settings/page.tsx # Profile & billing
+│   ├── login/page.tsx        # Login
+│   ├── signup/page.tsx       # Register
+│   ├── auth/callback/route.ts
+│   ├── p/[slug]/             # Public client portal
+│   │   ├── page.tsx          # Server component
+│   │   └── approve-button.tsx
+│   └── api/
+│       ├── projects/[id]/approve/route.ts
+│       └── stripe/
+│           ├── webhook/route.ts
+│           ├── create-checkout/route.ts
+│           └── create-payment-link/route.ts
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts         # Browser client
+│   │   └── server.ts         # Server client
+│   ├── stripe.ts
+│   └── types.ts
+├── middleware.ts              # Auth session refresh
+supabase/
+└── migrations/
+    └── 001_schema.sql
+```
 
-## Learn More
+## Database Schema
 
-To learn more about Next.js, take a look at the following resources:
+- **users** — Profile, plan, Stripe IDs
+- **projects** — Title, client info, status, slug, proposal content, amount
+- **milestones** — Per-project milestones with status tracking
+- **invoices** — Per-project invoices with Stripe payment links
+- **activities** — Timeline of all project events
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+All tables use Row Level Security (RLS). Users can only access their own data. Public client portal pages read project data via the `slug` field.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+Deploy to [Vercel](https://vercel.com):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push to GitHub
+2. Import in Vercel
+3. Add all environment variables
+4. Update `NEXT_PUBLIC_APP_URL` to your production URL
+5. Update Stripe webhook URL to production endpoint
