@@ -16,7 +16,7 @@ const plans = [
     id: 'pro',
     name: 'Pro',
     price: '$19/mo',
-    features: ['Unlimited projects', 'Custom branding', 'Stripe payments'],
+    features: ['Unlimited projects', 'Custom branding', 'Payments'],
   },
   {
     id: 'agency',
@@ -32,7 +32,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [upgrading] = useState<string | null>(null);
 
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -77,23 +77,7 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   }
 
-  async function handleUpgrade(plan: string) {
-    setUpgrading(plan);
-    try {
-      const res = await fetch('/api/stripe/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
-      });
-
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } finally {
-      setUpgrading(null);
-    }
-  }
+  // Upgrade functionality coming soon
 
   if (loading) {
     return (
@@ -216,16 +200,7 @@ export default function SettingsPage() {
                     Current Plan
                   </p>
                 ) : plan.id !== 'free' ? (
-                  <button
-                    onClick={() => handleUpgrade(plan.id)}
-                    disabled={upgrading === plan.id}
-                    className="mt-4 w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-1"
-                  >
-                    {upgrading === plan.id && (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    )}
-                    Upgrade
-                  </button>
+                  <p className="text-xs text-neutral-500 mt-4">Coming soon</p>
                 ) : null}
               </div>
             );

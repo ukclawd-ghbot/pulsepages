@@ -65,7 +65,6 @@ export default function ProjectDetailPage() {
   const [newInvoiceAmount, setNewInvoiceAmount] = useState('');
   const [newInvoiceDue, setNewInvoiceDue] = useState('');
   const [addingInvoice, setAddingInvoice] = useState(false);
-  const [creatingPayLink, setCreatingPayLink] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     const [projectRes, milestonesRes, invoicesRes, activitiesRes] =
@@ -174,27 +173,7 @@ export default function ProjectDetailPage() {
     fetchData();
   }
 
-  async function createPaymentLink(invoiceId: string) {
-    setCreatingPayLink(invoiceId);
-    try {
-      const res = await fetch('/api/stripe/create-payment-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoiceId }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        await supabase
-          .from('invoices')
-          .update({ stripe_payment_link: data.url, status: 'sent' })
-          .eq('id', invoiceId);
-        fetchData();
-      }
-    } finally {
-      setCreatingPayLink(null);
-    }
-  }
+  // Payment link creation - coming soon
 
   async function sendToClient() {
     if (!project) return;
@@ -552,23 +531,9 @@ export default function ProjectDetailPage() {
               >
                 {invoice.status}
               </span>
-              {!invoice.stripe_payment_link && invoice.status !== 'paid' && (
-                <button
-                  onClick={() => createPaymentLink(invoice.id)}
-                  disabled={creatingPayLink === invoice.id}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 border border-[#262626] hover:bg-[#1a1a1a] text-neutral-300 text-xs rounded-lg transition-colors shrink-0"
-                >
-                  {creatingPayLink === invoice.id ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <DollarSign className="h-3 w-3" />
-                  )}
-                  Create Pay Link
-                </button>
-              )}
-              {invoice.stripe_payment_link && (
+              {invoice.payment_link && (
                 <a
-                  href={invoice.stripe_payment_link}
+                  href={invoice.payment_link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300"

@@ -4,8 +4,6 @@ export interface User {
   full_name: string | null;
   business_name: string | null;
   avatar_url: string | null;
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
   plan: 'free' | 'pro' | 'agency';
   created_at: string;
 }
@@ -45,8 +43,7 @@ export interface Invoice {
   amount: number;
   currency: string;
   status: 'draft' | 'sent' | 'paid' | 'overdue';
-  stripe_payment_intent_id: string | null;
-  stripe_payment_link: string | null;
+  payment_link: string | null;
   due_date: string | null;
   paid_at: string | null;
   created_at: string;
